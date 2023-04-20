@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
+import { DragControls } from 'three/examples/jsm/controls/DragControls.js';
 import * as dat from 'dat.gui'
 
 const renderer = new THREE.WebGLRenderer()
@@ -22,38 +23,16 @@ camera.position.set(0,0,5)
 const orbit = new OrbitControls(camera, renderer.domElement)
 
 const gui = new dat.GUI()
-
-// const pointLightWhite = new THREE.PointLight( 0xffffff, 1, 100 );
-// pointLightWhite.position.set( 0.0,0.0,3.43 );
-// pointLightWhite.intensity = .5
-// scene.add( pointLightWhite );
-
-// const pointLightHelper1 = new THREE.PointLightHelper( pointLightWhite, 1 );
-// scene.add( pointLightHelper1 );
-
-// const pointLightRed = new THREE.PointLight( 0xff0000, 1, 100 );
-// pointLightRed.position.set( 5,3.3,.34 );
-// pointLightRed.intensity = 3.2
-// scene.add( pointLightRed );
-
-// const pointLightHelper2 = new THREE.PointLightHelper( pointLightRed, 1 );
-// scene.add( pointLightHelper2 );
-
-const pointLight2 = new THREE.PointLight( 0x00FF00, 1, 100 );
-// const pointLight2 = new THREE.DirectionalLight(0xffffff, 0.5)
-pointLight2.position.set( 0, 0, 1);
-pointLight2.color.set(0xffffff)
-pointLight2.intensity = 1.0
-scene.add( pointLight2 );
-
-// const pointLightHelper3 = new THREE.PointLightHelper( pointLight2, 1 );
-// scene.add( pointLightHelper3 );
+const pointLight = new THREE.PointLight( 0x00FF00, 1, 100 );
+// const pointLight = new THREE.DirectionalLight(0xffffff, 0.5)
+pointLight.position.set( 0, 0, 1);
+pointLight.color.set(0xffffff)
+pointLight.intensity = 0.5
+scene.add( pointLight );
 
 const textureLoader = new THREE.TextureLoader()
-const imgTexture = textureLoader.load('/assets/origin.png')
-console.log("img:", imgTexture)
+const imgTexture = textureLoader.load('assets/origin.png')
 
-// const fireTexture = textureLoader.load('/assets/origin.jpg') 
 const mat = new THREE.MeshBasicMaterial({
   map: imgTexture,
   depthTest: true,
@@ -76,15 +55,16 @@ const heightTexture = textureLoader.load('/assets/depth.png')
 // const geometry = new THREE.SphereGeometry( 1, 64, 64 );
 // console.log(imgTexture.innerWidth, imgTexture.innerHeight)
 // console.log("size is ", imgTexture.naturalWidth, "x", imgTexture.naturalHeight)
-console.log("size is ", imgTexture)
 const geometry = new THREE.PlaneGeometry(2, 3);
 // PlaneGeometry
 const material = new THREE.MeshStandardMaterial(
   {
+    bumpMap:heightTexture,
+    bumpScale:10,
     normalMap:normalTexture,
     map: imgTexture,
-    roughness: 0.4,
-    metalness: 0.7,
+    roughness: 0.8,
+    metalness: 0.5,
     blending: THREE.CustomBlending,
     blendSrc: THREE.SrcAlphaFactor,
     blendDst: THREE.OneFactor
@@ -95,70 +75,59 @@ const material = new THREE.MeshStandardMaterial(
 const sphere = new THREE.Mesh( geometry, material );
 scene.add( sphere );
 
-// const fireTexture = textureLoader.load('/assets/fire.jpg') 
-// const mat = new THREE.MeshBasicMaterial({
-//   map: fireTexture,
-//   depthTest: true,
-//   depthWrite: false,
-//   transparent: true,
-//   blending: THREE.AdditiveBlending
-// })
+const lightSpot = new THREE.SphereGeometry(0.1);
+const spotMat = new THREE.MeshStandardMaterial({
+    map: textureLoader.load('/assets/fire.png'),
+    color:0x292929,
+    roughness: 0.4,
+    metalness: 0.7,
+    blending: THREE.NoBlending
+})
 
-// const postPlane = new THREE.PlaneGeometry(2, 2)
-// const postQuad = new THREE.Mesh(postPlane, mat)
-// // postQuad.position.set(
-// //   1920 - (800 * 0.5 + (1280 - 800) * 0.5),
-// //   1280 * 0.5, 0
-// //   )
-
-// scene.add(postQuad)
+const spotMesh = new THREE.Mesh(lightSpot, spotMat)
+// scene.add(spotMesh)
 
 const properties = gui.addFolder('properties')
 properties.add(material, 'roughness', 0.0, 1.0, 0.01)
 properties.add(material, 'metalness', 0.0, 1.0, 0.01)
+properties.add(material, 'bumpScale', 0.0, 10.0, 0.01)
 properties.open()
 
-// const normalParams = gui.addFolder('normal')
-// normalParams.add(material.normalScale, 'x', 0.0, 2.0, 0.01)
-// normalParams.add(material.normalScale, 'y', 0.0, 2.0, 0.01)
-// normalParams.open()
+const light = gui.addFolder('light properties')
 
-// const heightParams = gui.addFolder('height')
-// heightParams.add(material, 'bumpScale', 0.0, 2.0, 0.01)
-// heightParams.open()
+light.add(pointLight.position, 'x').min(-5).max(5).step(.01)
+light.add(pointLight.position, 'y').min(-5).max(5).step(.01)
+light.add(pointLight.position, 'z', -10, 10, 0.01)
+light.add(pointLight, 'intensity').min(0).max(1).step(.01)
+light.open()
 
-// const whiteLight = gui.addFolder('white light')
-
-// whiteLight.add(pointLightWhite.position, 'x').min(-5).max(5).step(.01)
-// whiteLight.add(pointLightWhite.position, 'y').min(-5).max(5).step(.01)
-// whiteLight.add(pointLightWhite.position, 'z').min(-5).max(5).step(.01)
-// whiteLight.add(pointLightWhite, 'intensity').min(0).max(10).step(.01)
-
-// const redLight = gui.addFolder('red light')
-
-// redLight.add(pointLightRed.position, 'x').min(-5).max(5).step(.01)
-// redLight.add(pointLightRed.position, 'y').min(-5).max(5).step(.01)
-// redLight.add(pointLightRed.position, 'z').min(-5).max(5).step(.01)
-// redLight.add(pointLightRed, 'intensity').min(0).max(10).step(.01)
-
-const light3 = gui.addFolder('light properties')
-
-light3.add(pointLight2.position, 'x').min(-5).max(5).step(.01)
-light3.add(pointLight2.position, 'y').min(-5).max(5).step(.01)
-light3.add(pointLight2.position, 'z').min(-5).max(5).step(.01)
-light3.add(pointLight2, 'intensity').min(0).max(10).step(.01)
-light3.open()
-
-const light3Color = {
+const lightColor = {
   color : 0xffffff
 }
 
-light3.addColor(light3Color, 'color').onChange( (e) => {
-  pointLight2.color.set(e)
+light.addColor(lightColor, 'color').onChange( (e) => {
+  pointLight.color.set(e)
 } )
+
+const mousePosition = new THREE.Vector2()
+window.addEventListener('mousemove', function(e){
+  mousePosition.x = (e.clientX / window.innerWidth) * 2 - 1
+  mousePosition.y = - (e.clientY / window.innerHeight) * 2 + 1
+  console.log("pos changed:", mousePosition)
+//   spotMesh.position.set(mousePosition.x * 2.0 - 1.0, mousePosition.y * 2.0 - 1.0, pointLight.position.z)
+})
+
+window.addEventListener('mousedown', function(e){
+  mousePosition.x = (e.clientX / window.innerWidth) * 2 - 1
+  mousePosition.y = - (e.clientY / window.innerHeight) * 2 + 1
+//   spotMesh.position.set(mousePosition.x, mousePosition.y, pointLight.position.z)
+//   pointLight.position.x = mousePosition.x
+//   pointLight.position.y = mousePosition.y
+})
 
 function animate(){
   // material.normalScale.set(time, time)
+  spotMesh.position.set(pointLight.position.x, pointLight.position.y, pointLight.position.z)
   renderer.render(scene, camera)
 }
 
@@ -170,8 +139,3 @@ window.addEventListener('resize', function(){
   renderer.setSize(window.innerWidth, window.innerHeight)
 })
 
-const mousePosition = new THREE.Vector2()
-window.addEventListener('mousemove', function(e){
-  mousePosition.x = (e.clientX / window.innerWidth) * 2 - 1
-  mousePosition.y = - (e.clientY / window.innerHeight) * 2 + 1
-})
