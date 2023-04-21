@@ -9,6 +9,7 @@ class TestGeometry extends THREE.BufferGeometry {
 		super();
 
 		const scale = 1;
+		const ratio = 1;
 		this.getPixelCanvas(depthImgPath, scale, (_canvas) => {
 			const canvas = _canvas;
 
@@ -16,7 +17,7 @@ class TestGeometry extends THREE.BufferGeometry {
 			this.canvas_height = canvas.height;
 			this.depthData = this.getPixelColor(canvas, 0, 0, this.canvas_width, this.canvas_height);
 			// console.log("depth data:", this.depthData);
-			this.addParams(this.depthData, 0, width, height, canvas.width, canvas.height);
+			this.addParams(this.depthData, 0, width, height, canvas.width / ratio, canvas.height / ratio);
 		})
 
 		this.getPixelCanvas(normalImgPath, scale, (_canvas) => {
@@ -26,7 +27,7 @@ class TestGeometry extends THREE.BufferGeometry {
 			this.canvas_height = canvas.height;
 			this.normalData = this.getPixelColor(canvas, 0, 0, this.canvas_width, this.canvas_height);
 			// console.log("normal data:", this.normalData);
-			this.addParams(this.normalData, 1, width, height, canvas.width, canvas.height);
+			this.addParams(this.normalData, 1, width, height, canvas.width / ratio, canvas.height / ratio);
 		})
 	
 	}

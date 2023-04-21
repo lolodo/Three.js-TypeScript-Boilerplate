@@ -11,6 +11,11 @@ const depthImg = '/assets/depth-estimation.jpeg'
 const maskImg = '/assets/mask.png'
 const normalImg = '/assets/surface-normals.jpeg'
 
+// const originImg = '/assets/model/origin.png'
+// const depthImg = '/assets/model/depth.png'
+// const maskImg = '/assets/mask.png'
+// const normalImg = '/assets/model/normal.png'
+
 const renderer = new THREE.WebGLRenderer()
 const container = document.getElementById('container')
 if (container === null) {
@@ -62,7 +67,7 @@ const postQuad = new THREE.Mesh(postPlane, mat)
 //   1280 * 0.5, 0
 //   )
 
-scene.add(postQuad)
+// scene.add(postQuad)
 
 const vertex_shader = `
     varying vec2 vUv; // pass the uv coordinates of each pixel to the frag shader
@@ -152,15 +157,19 @@ const alphaTexture = textureLoader.load(maskImg)
 const normalTexture = textureLoader.load(normalImg)
 var depthMat = new THREE.MeshStandardMaterial({
     // displacementMap:heightTexture,
-    alphaMap:alphaTexture,
+    // alphaMap:alphaTexture,
     // displacementScale:10.0
     // normalMap: normalTexture,
     map:imgTexture,
     roughness: 0.8,
     metalness: 0.5,
-    blending: THREE.CustomBlending,
-    blendSrc: THREE.SrcAlphaFactor,
-    blendDst: THREE.OneFactor
+    depthTest: true,
+    depthWrite: true,
+    transparent: false,
+    blending: THREE.NoBlending
+    // blending: THREE.CustomBlending,
+    // blendSrc: THREE.SrcAlphaFactor,
+    // blendDst: THREE.OneFactor
     // wireframe:true
 })
 
@@ -234,6 +243,12 @@ window.addEventListener('mousemove', function (e) {
     mousePosition.y = - (e.clientY / window.innerHeight) * 2 + 1
     // console.log("pos changed:", mousePosition)
     //   spotMesh.position.set(mousePosition.x * 2.0 - 1.0, mousePosition.y * 2.0 - 1.0, pointLight.position.z)
+})
+
+window.addEventListener('dragstart', function(e) {
+})
+
+window.addEventListener('dragend', function(e) {
 })
 
 window.addEventListener('mousedown', function (e) {
