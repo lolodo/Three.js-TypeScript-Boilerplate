@@ -6,6 +6,11 @@ import { DepthGeometry } from './DepthGeometry';
 import { TestGeometry } from './TestGeometry';
 import { exit } from 'process';
 
+const originImg = '/assets/original.jpeg'
+const depthImg = '/assets/depth-estimation.jpeg'
+const maskImg = '/assets/mask.png'
+const normalImg = '/assets/surface-normals.jpeg'
+
 const renderer = new THREE.WebGLRenderer()
 const container = document.getElementById('container')
 if (container === null) {
@@ -38,7 +43,7 @@ pointLight.intensity = 2.0
 scene.add(pointLight);
 
 const textureLoader = new THREE.TextureLoader()
-const imgTexture = textureLoader.load('assets/original.jpeg')
+const imgTexture = textureLoader.load(originImg)
 
 const mat = new THREE.MeshBasicMaterial({
     map: imgTexture,
@@ -49,7 +54,7 @@ const mat = new THREE.MeshBasicMaterial({
 })
 
 const imageLoader = new THREE.ImageLoader()
-const imageparams = imageLoader.load('assets/original.jpeg')
+const imageparams = imageLoader.load(originImg)
 const postPlane = new THREE.PlaneGeometry(2, 2.0 * imageparams.height / imageparams.width)
 const postQuad = new THREE.Mesh(postPlane, mat)
 // postQuad.position.set(
@@ -120,7 +125,7 @@ bufferGeometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2))
 var loader = new THREE.TextureLoader();
 
 // specify the url to the texture
-var url = '/assets/original.jpeg';
+var url = originImg;
 
 // specify custom uniforms and attributes for shaders
 // Uniform types: https://github.com/mrdoob/three.js/wiki/Uniforms-types
@@ -143,8 +148,8 @@ mesh.position.set(0, 0, 0)
 // Add the image to the scene
 // scene.add(mesh);
 
-const alphaTexture = textureLoader.load('/assets/mask.png')
-const normalTexture = textureLoader.load('/assets/surface-normals.jpeg')
+const alphaTexture = textureLoader.load(maskImg)
+const normalTexture = textureLoader.load(normalImg)
 var depthMat = new THREE.MeshStandardMaterial({
     // displacementMap:heightTexture,
     alphaMap:alphaTexture,
@@ -159,7 +164,7 @@ var depthMat = new THREE.MeshStandardMaterial({
     // wireframe:true
 })
 
-var depthGeo = new TestGeometry('/assets/depth-estimation.jpeg', '/assets/surface-normals.jpeg', 2, 2.0 * imageparams.height / imageparams.width);
+var depthGeo = new TestGeometry(depthImg, normalImg, 2, 2.0 * imageparams.height / imageparams.width);
 var mesh1 = new THREE.Mesh(depthGeo, depthMat);
 scene.add(mesh1)
 // console.log("depth geo:", depthGeo)
