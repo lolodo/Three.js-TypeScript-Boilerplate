@@ -4,11 +4,16 @@ import { DragControls } from 'three/examples/jsm/controls/DragControls.js';
 import * as dat from 'dat.gui'
 import { DepthGeometry } from './DepthGeometry';
 import { TestGeometry } from './TestGeometry';
+import { exit } from 'process';
 
 const renderer = new THREE.WebGLRenderer()
+const container = document.getElementById('container')
+if (container === null) {
+    exit(-1)
+}
 
 renderer.setSize(window.innerWidth, window.innerHeight)
-document.body.appendChild(renderer.domElement)
+container.appendChild(renderer.domElement)
 
 renderer.shadowMap.enabled = true
 
@@ -27,13 +32,13 @@ const orbit = new OrbitControls(camera, renderer.domElement)
 const gui = new dat.GUI()
 const pointLight = new THREE.PointLight(0x00FF00, 1, 100);
 // const pointLight = new THREE.DirectionalLight(0xffffff, 0.5)
-pointLight.position.set(0, 0, 1);
+pointLight.position.set(-0.6, 0.7, 3);
 pointLight.color.set(0xffffff)
-pointLight.intensity = 0.5
+pointLight.intensity = 2.0
 scene.add(pointLight);
 
 const textureLoader = new THREE.TextureLoader()
-const imgTexture = textureLoader.load('assets/origin.png')
+const imgTexture = textureLoader.load('assets/original.jpeg')
 
 const mat = new THREE.MeshBasicMaterial({
     map: imgTexture,
@@ -43,7 +48,9 @@ const mat = new THREE.MeshBasicMaterial({
     blending: THREE.AdditiveBlending
 })
 
-const postPlane = new THREE.PlaneGeometry(2, 3)
+const imageLoader = new THREE.ImageLoader()
+const imageparams = imageLoader.load('assets/original.jpeg')
+const postPlane = new THREE.PlaneGeometry(2, 2.0 * imageparams.height / imageparams.width)
 const postQuad = new THREE.Mesh(postPlane, mat)
 // postQuad.position.set(
 //   1920 - (800 * 0.5 + (1280 - 800) * 0.5),
@@ -107,13 +114,13 @@ var uvs = new Float32Array([
 bufferGeometry.setIndex([0, 1, 2, 2, 3, 0])
 bufferGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
 bufferGeometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2))
-console.log("buffer geo:", bufferGeometry)
+// console.log("buffer geo:", bufferGeometry)
 
 // Create a texture loader so we can load our image file
 var loader = new THREE.TextureLoader();
 
 // specify the url to the texture
-var url = '/assets/origin.png';
+var url = '/assets/original.jpeg';
 
 // specify custom uniforms and attributes for shaders
 // Uniform types: https://github.com/mrdoob/three.js/wiki/Uniforms-types
@@ -136,13 +143,13 @@ mesh.position.set(0, 0, 0)
 // Add the image to the scene
 // scene.add(mesh);
 
-const heightTexture = textureLoader.load('/assets/depth.png')
-const normalTexture = textureLoader.load('/assets/normal.png')
+const alphaTexture = textureLoader.load('/assets/mask.png')
+const normalTexture = textureLoader.load('/assets/surface-normals.jpeg')
 var depthMat = new THREE.MeshStandardMaterial({
     // displacementMap:heightTexture,
-    // alphaMap:heightTexture
+    alphaMap:alphaTexture,
     // displacementScale:10.0
-    normalMap: normalTexture,
+    // normalMap: normalTexture,
     map:imgTexture,
     roughness: 0.8,
     metalness: 0.5,
@@ -151,16 +158,15 @@ var depthMat = new THREE.MeshStandardMaterial({
     blendDst: THREE.OneFactor
     // wireframe:true
 })
-// var depthGeo = new TestGeometry('/assets/depth.png');
-// var depthGeo = new TestGeometry(2, 3);
-// // const depthGeo = new THREE.PlaneGeometry(2, 3);
-// var mesh1 = new THREE.Mesh(depthGeo, depthMat);
-// scene.add(mesh1)
+
+var depthGeo = new TestGeometry('/assets/depth-estimation.jpeg', '/assets/surface-normals.jpeg', 2, 2.0 * imageparams.height / imageparams.width);
+var mesh1 = new THREE.Mesh(depthGeo, depthMat);
+scene.add(mesh1)
 // console.log("depth geo:", depthGeo)
 
 // const normalTexture = textureLoader.load('/assets/normal.png')
 const sgeometry = new THREE.SphereGeometry( 1, 64, 64 );
-console.log("sphere:", sgeometry)
+// console.log("sphere:", sgeometry)
 // console.log(imgTexture.innerWidth, imgTexture.innerHeight)
 // console.log("size is ", imgTexture.naturalWidth, "x", imgTexture.naturalHeight)
 const geometry = new THREE.PlaneGeometry(2, 3);
@@ -181,11 +187,11 @@ const material = new THREE.MeshStandardMaterial(
 // material.bumpMap = heightTexture 
 // material.normalScale.set(2, 2)
 const sphere = new THREE.Mesh(geometry, material);
-scene.add(sphere);
+// scene.add(sphere);
 
 const lightSpot = new THREE.SphereGeometry(0.1);
 const spotMat = new THREE.MeshStandardMaterial({
-    map: textureLoader.load('/assets/fire.png'),
+    // map: textureLoader.load('/assets/fire.png'),
     color: 0x292929,
     roughness: 0.4,
     metalness: 0.7,
@@ -206,7 +212,7 @@ const light = gui.addFolder('light properties')
 light.add(pointLight.position, 'x').min(-5).max(5).step(.01)
 light.add(pointLight.position, 'y').min(-5).max(5).step(.01)
 light.add(pointLight.position, 'z', -10, 10, 0.01)
-light.add(pointLight, 'intensity').min(0).max(1).step(.01)
+light.add(pointLight, 'intensity').min(0).max(3).step(.01)
 light.open()
 
 const lightColor = {
