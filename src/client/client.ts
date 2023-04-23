@@ -16,6 +16,9 @@ let render_mode = '3D';
 let render_pass = false;
 var composer: EffectComposer | undefined;
 
+var options = {
+    control: 'light'
+}
 // const originImg = '/assets/original.jpeg'
 // const depthImg = '/assets/depth-estimation.jpeg'
 // const maskImg = '/assets/mask.png'
@@ -98,6 +101,7 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(0, 0, 5)
 
 const orbit = new OrbitControls(camera, renderer.domElement)
+orbit.enabled = false;
 
 const gui = new dat.GUI()
 const pointLight = new THREE.PointLight(0x00FF00, 1, 100);
@@ -118,6 +122,7 @@ const imgTexture = textureLoader.load(originImg)
 const alphaTexture = textureLoader.load(maskImg)
 const normalTexture = textureLoader.load(normalImg)
 
+const properties = gui.addFolder('properties')
 const imageLoader = new THREE.ImageLoader()
 const imageparams = imageLoader.load(
     originImg,
@@ -159,7 +164,7 @@ const imageparams = imageLoader.load(
 
             properties.add(material, 'roughness', 0.0, 1.0, 0.01)
             properties.add(material, 'metalness', 0.0, 1.0, 0.01)
-            properties.add(material, 'bumpScale', 0.0, 10.0, 0.01)
+            // properties.add(material, 'bumpScale', 0.0, 10.0, 0.01)
         } else {
             const mat = new THREE.MeshBasicMaterial({
                 map: imgTexture,
@@ -195,7 +200,7 @@ const imageparams = imageLoader.load(
 
             properties.add(depthMat, 'roughness', 0.0, 1.0, 0.01)
             properties.add(depthMat, 'metalness', 0.0, 1.0, 0.01)
-            properties.add(depthMat, 'bumpScale', 0.0, 10.0, 0.01)
+            // properties.add(depthMat, 'bumpScale', 0.0, 10.0, 0.01)
         }
     },
 
@@ -208,32 +213,18 @@ const imageparams = imageLoader.load(
     }
 );
 
-const properties = gui.addFolder('properties')
 
-const light = gui.addFolder('light properties')
-light.add(pointLight.position, 'x').min(-5).max(5).step(.01)
-light.add(pointLight.position, 'y').min(-5).max(5).step(.01)
-light.add(pointLight.position, 'z', -10, 10, 0.01)
-light.add(pointLight, 'intensity').min(0).max(3).step(.01)
-light.open()
-
-const lightColor = {
-    color: 0xffffff
-}
-
-light.addColor(lightColor, 'color').onChange((e) => {
-    pointLight.color.set(e)
-})
+propertiesSetting(gui);
 
 if (render_pass && composer !== undefined) {
     const renderPass = new RenderPass(scene, camera);
     composer.addPass(renderPass);
 
-    const effectCustomGrayScale = new ShaderPass(blendingShader);
-    composer.addPass(effectCustomGrayScale);
+    // const effectCustomGrayScale = new ShaderPass(blendingShader);
+    // composer.addPass(effectCustomGrayScale);
 
-    // const glitchPass = new GlitchPass();
-    // composer.addPass( glitchPass );
+    const glitchPass = new GlitchPass();
+    composer.addPass(glitchPass);
 }
 
 const mousePosition = new THREE.Vector2()
@@ -261,8 +252,9 @@ window.addEventListener('mousedown', function (e) {
 function animate() {
     // material.normalScale.set(time, time)
     // spotMesh.position.set(pointLight.position.x, pointLight.position.y, pointLight.position.z)
+    // requestAnimationFrame(animate);
+    orbit.update();
     if (render_pass && composer !== undefined) {
-        requestAnimationFrame(animate);
         composer.render();
     } else {
         renderer.render(scene, camera)
@@ -277,4 +269,21 @@ window.addEventListener('resize', function () {
     camera.updateProjectionMatrix()
     renderer.setSize(window.innerWidth, window.innerHeight)
 })
+
+function propertiesSetting(gui: dat.GUI) {
+    const light = gui.addFolder('light properties')
+    light.add(pointLight.position, 'x').min(-5).max(5).step(.01)
+    light.add(pointLight.position, 'y').min(-5).max(5).step(.01)
+    light.add(pointLight.position, 'z', -10, 10, 0.01)
+    light.add(pointLight, 'intensity').min(0).max(3).step(.01)
+
+    const lightColor = {
+        color: 0xffffff
+    }
+    light.addColor(lightColor, 'color').onChange((e) => {
+        pointLight.color.set(e)
+    })
+
+    // gui.add(options, 'control', ['light', 'orbit']);
+}
 
