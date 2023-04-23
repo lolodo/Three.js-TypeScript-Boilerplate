@@ -7,7 +7,7 @@ class TestGeometry extends THREE.BufferGeometry {
 	canvas_height = 0;
 	canvas: HTMLCanvasElement;
 	context: CanvasRenderingContext2D | null;
-	constructor(depthImgPath: string, normalImgPath:string, width = 1, height = 1) {
+	constructor(depthImgPath: string, normalImgPath: string, width = 1, height = 1) {
 		super();
 
 		this.canvas = document.createElement('canvas');
@@ -33,9 +33,9 @@ class TestGeometry extends THREE.BufferGeometry {
 			// console.log("normal data:", this.normalData);
 			this.addParams(normalData, 1, width, height, canvas.width / ratio, canvas.height / ratio);
 		})
-	
+
 	}
-	
+
 	addParams(data: any[], type: number, width: number, height: number, widthSegments: number, heightSegments: number) {
 		const width_half = width / 2;
 		const height_half = height / 2;
@@ -196,7 +196,7 @@ class TestGeometry extends THREE.BufferGeometry {
 		return colors;
 	}
 
-	gaaussianSmooth(data : any[], column: number, row: number, width: number, height: number) {
+	gaaussianSmooth(data: any[], column: number, row: number, width: number, height: number) {
 		if (data === undefined) {
 			return;
 		}
