@@ -5,9 +5,11 @@ class TestGeometry extends THREE.BufferGeometry {
 	normalData: any[] | undefined; 
 	canvas_width = 0;
 	canvas_height = 0;
+	canvas: HTMLCanvasElement;
 	constructor(depthImgPath: string, normalImgPath:string, width = 1, height = 1) {
 		super();
 
+		this.canvas = document.createElement('canvas');
 		const scale = 1;
 		const ratio = 1;
 		this.getPixelCanvas(depthImgPath, scale, (_canvas) => {
@@ -127,8 +129,8 @@ class TestGeometry extends THREE.BufferGeometry {
 
 	getPixelCanvas(url: string, scale = 1, callback: (arg0: HTMLCanvasElement) => any) {
 		if (!url) return false;
-		let canvas = document.createElement('canvas');
-
+		// let canvas = document.createElement('canvas');
+		const canvas = this.canvas;
 		const context = canvas.getContext('2d');
 		if (context === null) {
 			return false;
