@@ -1,15 +1,17 @@
 import * as THREE from 'three'
 
 class TestGeometry extends THREE.BufferGeometry {
-	depthData: any[] | undefined ;
-	normalData: any[] | undefined; 
+	// depthData: any[];
+	// normalData: any[]; 
 	canvas_width = 0;
 	canvas_height = 0;
 	canvas: HTMLCanvasElement;
+	context: CanvasRenderingContext2D | null;
 	constructor(depthImgPath: string, normalImgPath:string, width = 1, height = 1) {
 		super();
 
 		this.canvas = document.createElement('canvas');
+		this.context = this.canvas.getContext('2d', { willReadFrequently: true });
 		const scale = 1;
 		const ratio = 1;
 		this.getPixelCanvas(depthImgPath, scale, (_canvas) => {
@@ -17,9 +19,9 @@ class TestGeometry extends THREE.BufferGeometry {
 
 			this.canvas_width = canvas.width;
 			this.canvas_height = canvas.height;
-			this.depthData = this.getPixelColor(canvas, 0, 0, this.canvas_width, this.canvas_height);
+			const depthData = this.getPixelColor(this.context, 0, 0, this.canvas_width, this.canvas_height);
 			// console.log("depth data:", this.depthData);
-			this.addParams(this.depthData, 0, width, height, canvas.width / ratio, canvas.height / ratio);
+			this.addParams(depthData, 0, width, height, canvas.width / ratio, canvas.height / ratio);
 		})
 
 		this.getPixelCanvas(normalImgPath, scale, (_canvas) => {
@@ -27,9 +29,9 @@ class TestGeometry extends THREE.BufferGeometry {
 
 			this.canvas_width = canvas.width;
 			this.canvas_height = canvas.height;
-			this.normalData = this.getPixelColor(canvas, 0, 0, this.canvas_width, this.canvas_height);
+			let normalData = this.getPixelColor(this.context, 0, 0, this.canvas_width, this.canvas_height);
 			// console.log("normal data:", this.normalData);
-			this.addParams(this.normalData, 1, width, height, canvas.width / ratio, canvas.height / ratio);
+			this.addParams(normalData, 1, width, height, canvas.width / ratio, canvas.height / ratio);
 		})
 	
 	}
@@ -131,7 +133,8 @@ class TestGeometry extends THREE.BufferGeometry {
 		if (!url) return false;
 		// let canvas = document.createElement('canvas');
 		const canvas = this.canvas;
-		const context = canvas.getContext('2d', { willReadFrequently: true });
+		// const context = canvas.getContext('2d', { willReadFrequently: true });
+		const context = this.context;
 		if (context === null) {
 			return false;
 		}
@@ -156,8 +159,11 @@ class TestGeometry extends THREE.BufferGeometry {
 	}
 
 	// 读取指定canvas 的像素颜色
-	getPixelColor(canvas: { getContext: (arg0: string) => any; }, x: any, y: any, width: number, height: any) {
-		var context = canvas.getContext("2d");
+	getPixelColor(context: CanvasRenderingContext2D | null, x: any, y: any, width: number, height: any) {
+		const colors: { x: number; y: number; color: string; r: number; g: number; b: number; a: number; }[] = [];
+		if (context === null) {
+			return colors;
+		}
 		var imageData = context.getImageData(x, y, width, height);
 		// console.log("img:", imageData)
 		// 获取该点像素数据 
@@ -165,7 +171,6 @@ class TestGeometry extends THREE.BufferGeometry {
 
 		// return `rgba(${r},${g},${b},${a})`
 		let index = 0;
-		const colors = [];
 		for (let i = 0; i < pixel.length; i += 4) {
 
 			var r = pixel[i + 0];
