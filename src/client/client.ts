@@ -5,20 +5,77 @@ import * as dat from 'dat.gui'
 import { DepthGeometry } from './DepthGeometry';
 import { TestGeometry } from './TestGeometry';
 import { exit } from 'process';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { GlitchPass } from 'three/examples/jsm/postprocessing/GlitchPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 
 // 3D/2D
 let render_mode = '3D';
+
+let render_pass = false;
 const originImg = '/assets/original.jpeg'
 const depthImg = '/assets/depth-estimation.jpeg'
 const maskImg = '/assets/mask.png'
 const normalImg = '/assets/surface-normals.jpeg'
+var composer: EffectComposer | undefined;
 
 // const originImg = '/assets/model/origin.png'
 // const depthImg = '/assets/model/depth.png'
 // const maskImg = '/assets/mask.png'
 // const normalImg = '/assets/model/normal.png'
 
+const blendingShader = {
+    'uniforms': {
+        'tDiffuse': { 'type': 't', 'value': null },
+        'rPower': { 'type': 'f', 'value': 0.2126 },
+        'gPower': { 'type': 'f', 'value': 0.7152 },
+        'bPower': { 'type': 'f', 'value': 0.0722 }
+    },
+
+    'vertexShader': [
+        `varying vec2 vUv;
+        void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+        }
+        `
+    ].join('\n'),
+
+    'fragmentShader': [
+        `
+      uniform float rPower;
+      uniform float gPower;
+      uniform float bPower;
+
+      // pass in the image/texture we'll be modifying
+      uniform sampler2D tDiffuse;
+
+      // used to determine the correct texel we're working on
+      varying vec2 vUv;
+
+      // executed, in parallel, for each pixel
+      void main() {
+
+      // get the pixel from the texture we're working with (called a texel)
+      vec4 texel = texture2D( tDiffuse, vUv );
+
+      // calculate the new color
+      float gray = texel.r*rPower + texel.g*gPower + texel.b*bPower;
+
+      // return this new color
+      gl_FragColor = vec4( vec3(gray), texel.w );
+      }`
+
+    ].join('\n')
+}
+
 const renderer = new THREE.WebGLRenderer()
+
+if (render_pass) {
+    composer = new EffectComposer(renderer);
+}
+
 const container = document.getElementById('container')
 if (container === null) {
     exit(-1)
@@ -50,7 +107,7 @@ if (render_mode == '2D') {
     pointLight.intensity = 1.0
 } else {
     pointLight.position.set(-0.6, 0.7, 3);
-    pointLight.intensity = 2.0
+    pointLight.intensity = 0.5
 
 }
 scene.add(pointLight);
@@ -60,7 +117,7 @@ const imgTexture = textureLoader.load(originImg)
 
 const imageLoader = new THREE.ImageLoader()
 const imageparams = imageLoader.load(originImg)
-if (render_mode === '2D' || render_mode === '3D') {
+if (render_mode === '2D') {
     const postPlane = new THREE.PlaneGeometry(2, 2.0 * imageparams.height / imageparams.width)
     const mat = new THREE.MeshBasicMaterial({
         map: imgTexture,
@@ -167,6 +224,14 @@ const properties = gui.addFolder('properties')
 const alphaTexture = textureLoader.load(maskImg)
 const normalTexture = textureLoader.load(normalImg)
 if (render_mode !== '2D') {
+    const mat = new THREE.MeshBasicMaterial({
+        map: imgTexture,
+        depthTest: true,
+        depthWrite: false,
+        transparent: true,
+        blending: THREE.AdditiveBlending
+    })
+
     var depthMat = new THREE.MeshStandardMaterial({
         // displacementMap:heightTexture,
         // alphaMap:alphaTexture,
@@ -177,15 +242,17 @@ if (render_mode !== '2D') {
         metalness: 0.5,
         depthTest: true,
         depthWrite: true,
-        transparent: false,
-        blending: THREE.NoBlending
+        transparent: false
+        // blending: THREE.NoBlending
         // blending: THREE.CustomBlending,
-        // blendSrc: THREE.SrcAlphaFactor,
+        // blendSrc: THREE.OneFactor,
         // blendDst: THREE.OneFactor
         // wireframe:true
     })
 
     var depthGeo = new TestGeometry(depthImg, normalImg, 2, 2.0 * imageparams.height / imageparams.width);
+    var mesh0 = new THREE.Mesh(depthGeo, mat);
+    scene.add(mesh0)
     var mesh1 = new THREE.Mesh(depthGeo, depthMat);
     scene.add(mesh1)
 
@@ -257,6 +324,17 @@ light.addColor(lightColor, 'color').onChange((e) => {
     pointLight.color.set(e)
 })
 
+if (render_pass && composer !== undefined) {
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+
+    const effectCustomGrayScale = new ShaderPass(blendingShader);
+    composer.addPass(effectCustomGrayScale);
+
+    // const glitchPass = new GlitchPass();
+    // composer.addPass( glitchPass );
+}
+
 const mousePosition = new THREE.Vector2()
 window.addEventListener('mousemove', function (e) {
     mousePosition.x = (e.clientX / window.innerWidth) * 2 - 1
@@ -282,7 +360,13 @@ window.addEventListener('mousedown', function (e) {
 function animate() {
     // material.normalScale.set(time, time)
     // spotMesh.position.set(pointLight.position.x, pointLight.position.y, pointLight.position.z)
-    renderer.render(scene, camera)
+    if (render_pass && composer !== undefined) {
+        requestAnimationFrame(animate);
+        composer.render();
+    } else {
+        renderer.render(scene, camera)
+
+    }
 }
 
 renderer.setAnimationLoop(animate)
