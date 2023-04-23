@@ -12,14 +12,14 @@ class TestGeometry extends THREE.BufferGeometry {
 
 		this.canvas = document.createElement('canvas');
 		this.context = this.canvas.getContext('2d', { willReadFrequently: true });
-		const scale = 1;
+		const scale = 2;
 		const ratio = 1;
 		this.getPixelCanvas(depthImgPath, scale, (_canvas) => {
 			const canvas = _canvas;
 
 			this.canvas_width = canvas.width;
 			this.canvas_height = canvas.height;
-			const depthData = this.getPixelColor(this.context, 0, 0, this.canvas_width, this.canvas_height);
+			let depthData = this.getPixelColor(this.context, 0, 0, this.canvas_width, this.canvas_height);
 			// console.log("depth data:", this.depthData);
 			this.addParams(depthData, 0, width, height, canvas.width / ratio, canvas.height / ratio);
 		})
@@ -198,11 +198,11 @@ class TestGeometry extends THREE.BufferGeometry {
 
 	gaaussianSmooth(data: any[], column: number, row: number, width: number, height: number) {
 		if (data === undefined) {
-			return;
+			return new THREE.Vector3(0, 0, 0);
 		}
 		var index = row * width + column;
 		if (column < 1 || row < 1 || column >= width - 1 || row >= height - 1) {
-			return data[index];
+			return new THREE.Vector3(data[index].r, data[index].g, data[index].b);
 		}
 
 		var index00 = (row - 1) * width + column - 1;
