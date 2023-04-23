@@ -6,6 +6,8 @@ import { DepthGeometry } from './DepthGeometry';
 import { TestGeometry } from './TestGeometry';
 import { exit } from 'process';
 
+// 3D/2D
+let render_mode = '2D';
 const originImg = '/assets/original.jpeg'
 const depthImg = '/assets/depth-estimation.jpeg'
 const maskImg = '/assets/mask.png'
@@ -42,9 +44,15 @@ const orbit = new OrbitControls(camera, renderer.domElement)
 const gui = new dat.GUI()
 const pointLight = new THREE.PointLight(0x00FF00, 1, 100);
 // const pointLight = new THREE.DirectionalLight(0xffffff, 0.5)
-pointLight.position.set(-0.6, 0.7, 3);
 pointLight.color.set(0xffffff)
-pointLight.intensity = 2.0
+if (render_mode == '2D') {
+    pointLight.position.set(-0.6, 0.7, -0.2);
+    pointLight.intensity = 1.0
+} else {
+    pointLight.position.set(-0.6, 0.7, 3);
+    pointLight.intensity = 2.0
+
+}
 scene.add(pointLight);
 
 const textureLoader = new THREE.TextureLoader()
@@ -60,14 +68,16 @@ const mat = new THREE.MeshBasicMaterial({
 
 const imageLoader = new THREE.ImageLoader()
 const imageparams = imageLoader.load(originImg)
-const postPlane = new THREE.PlaneGeometry(2, 2.0 * imageparams.height / imageparams.width)
-const postQuad = new THREE.Mesh(postPlane, mat)
-// postQuad.position.set(
-//   1920 - (800 * 0.5 + (1280 - 800) * 0.5),
-//   1280 * 0.5, 0
-//   )
+if (render_mode === '2D') {
+    const postPlane = new THREE.PlaneGeometry(2, 2.0 * imageparams.height / imageparams.width)
+    const postQuad = new THREE.Mesh(postPlane, mat)
+    // postQuad.position.set(
+    //   1920 - (800 * 0.5 + (1280 - 800) * 0.5),
+    //   1280 * 0.5, 0
+    //   )
 
-// scene.add(postQuad)
+    scene.add(postQuad)
+}
 
 const vertex_shader = `
     varying vec2 vUv; // pass the uv coordinates of each pixel to the frag shader
@@ -153,72 +163,83 @@ mesh.position.set(0, 0, 0)
 // Add the image to the scene
 // scene.add(mesh);
 
+const properties = gui.addFolder('properties')
+
 const alphaTexture = textureLoader.load(maskImg)
 const normalTexture = textureLoader.load(normalImg)
-var depthMat = new THREE.MeshStandardMaterial({
-    // displacementMap:heightTexture,
-    // alphaMap:alphaTexture,
-    // displacementScale:10.0
-    // normalMap: normalTexture,
-    map:imgTexture,
-    roughness: 0.8,
-    metalness: 0.5,
-    depthTest: true,
-    depthWrite: true,
-    transparent: false,
-    blending: THREE.NoBlending
-    // blending: THREE.CustomBlending,
-    // blendSrc: THREE.SrcAlphaFactor,
-    // blendDst: THREE.OneFactor
-    // wireframe:true
-})
-
-var depthGeo = new TestGeometry(depthImg, normalImg, 2, 2.0 * imageparams.height / imageparams.width);
-var mesh1 = new THREE.Mesh(depthGeo, depthMat);
-scene.add(mesh1)
-// console.log("depth geo:", depthGeo)
-
-// const normalTexture = textureLoader.load('/assets/normal.png')
-const sgeometry = new THREE.SphereGeometry( 1, 64, 64 );
-// console.log("sphere:", sgeometry)
-// console.log(imgTexture.innerWidth, imgTexture.innerHeight)
-// console.log("size is ", imgTexture.naturalWidth, "x", imgTexture.naturalHeight)
-const geometry = new THREE.PlaneGeometry(2, 3);
-// PlaneGeometry
-const material = new THREE.MeshStandardMaterial(
-    {
-        // displacementMap: heightTexture,
-        // bumpScale: 10,
-        normalMap: normalTexture,
+if (render_mode !== '2D') {
+    var depthMat = new THREE.MeshStandardMaterial({
+        // displacementMap:heightTexture,
+        // alphaMap:alphaTexture,
+        // displacementScale:10.0
+        // normalMap: normalTexture,
         map: imgTexture,
         roughness: 0.8,
         metalness: 0.5,
-        blending: THREE.CustomBlending,
-        blendSrc: THREE.SrcAlphaFactor,
-        blendDst: THREE.OneFactor
-    }
-)
-// material.bumpMap = heightTexture 
-// material.normalScale.set(2, 2)
-const sphere = new THREE.Mesh(geometry, material);
-// scene.add(sphere);
+        depthTest: true,
+        depthWrite: true,
+        transparent: false,
+        blending: THREE.NoBlending
+        // blending: THREE.CustomBlending,
+        // blendSrc: THREE.SrcAlphaFactor,
+        // blendDst: THREE.OneFactor
+        // wireframe:true
+    })
 
-const lightSpot = new THREE.SphereGeometry(0.1);
-const spotMat = new THREE.MeshStandardMaterial({
-    // map: textureLoader.load('/assets/fire.png'),
-    color: 0x292929,
-    roughness: 0.4,
-    metalness: 0.7,
-    blending: THREE.NoBlending
-})
+    var depthGeo = new TestGeometry(depthImg, normalImg, 2, 2.0 * imageparams.height / imageparams.width);
+    var mesh1 = new THREE.Mesh(depthGeo, depthMat);
+    scene.add(mesh1)
 
-const spotMesh = new THREE.Mesh(lightSpot, spotMat)
+    properties.add(depthMat, 'roughness', 0.0, 1.0, 0.01)
+    properties.add(depthMat, 'metalness', 0.0, 1.0, 0.01)
+    properties.add(depthMat, 'bumpScale', 0.0, 10.0, 0.01)
+}
+// console.log("depth geo:", depthGeo)
+
+// const normalTexture = textureLoader.load('/assets/normal.png')
+// const sgeometry = new THREE.SphereGeometry(1, 64, 64);
+// console.log("sphere:", sgeometry)
+// console.log(imgTexture.innerWidth, imgTexture.innerHeight)
+// console.log("size is ", imgTexture.naturalWidth, "x", imgTexture.naturalHeight)
+
+if (render_mode === '2D') {
+    const geometry = new THREE.PlaneGeometry(2, 2.0 * imageparams.height / imageparams.width)
+    // PlaneGeometry
+    const material = new THREE.MeshStandardMaterial(
+        {
+            // displacementMap: heightTexture,
+            // bumpScale: 10,
+            normalMap: normalTexture,
+            map: imgTexture,
+            roughness: 0.8,
+            metalness: 0.5,
+            blending: THREE.CustomBlending,
+            blendSrc: THREE.SrcAlphaFactor,
+            blendDst: THREE.OneFactor
+        }
+    )
+    // material.bumpMap = heightTexture 
+    // material.normalScale.set(2, 2)
+    const sphere = new THREE.Mesh(geometry, material);
+    scene.add(sphere);
+
+    properties.add(material, 'roughness', 0.0, 1.0, 0.01)
+    properties.add(material, 'metalness', 0.0, 1.0, 0.01)
+    properties.add(material, 'bumpScale', 0.0, 10.0, 0.01)
+}
+
+// const lightSpot = new THREE.SphereGeometry(0.1);
+// const spotMat = new THREE.MeshStandardMaterial({
+//     // map: textureLoader.load('/assets/fire.png'),
+//     color: 0x292929,
+//     roughness: 0.4,
+//     metalness: 0.7,
+//     blending: THREE.NoBlending
+// })
+
+// const spotMesh = new THREE.Mesh(lightSpot, spotMat)
 // scene.add(spotMesh)
 
-const properties = gui.addFolder('properties')
-properties.add(material, 'roughness', 0.0, 1.0, 0.01)
-properties.add(material, 'metalness', 0.0, 1.0, 0.01)
-properties.add(material, 'bumpScale', 0.0, 10.0, 0.01)
 properties.open()
 
 const light = gui.addFolder('light properties')
@@ -245,10 +266,10 @@ window.addEventListener('mousemove', function (e) {
     //   spotMesh.position.set(mousePosition.x * 2.0 - 1.0, mousePosition.y * 2.0 - 1.0, pointLight.position.z)
 })
 
-window.addEventListener('dragstart', function(e) {
+window.addEventListener('dragstart', function (e) {
 })
 
-window.addEventListener('dragend', function(e) {
+window.addEventListener('dragend', function (e) {
 })
 
 window.addEventListener('mousedown', function (e) {
@@ -261,7 +282,7 @@ window.addEventListener('mousedown', function (e) {
 
 function animate() {
     // material.normalScale.set(time, time)
-    spotMesh.position.set(pointLight.position.x, pointLight.position.y, pointLight.position.z)
+    // spotMesh.position.set(pointLight.position.x, pointLight.position.y, pointLight.position.z)
     renderer.render(scene, camera)
 }
 
