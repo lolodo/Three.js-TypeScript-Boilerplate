@@ -58,18 +58,17 @@ scene.add(pointLight);
 const textureLoader = new THREE.TextureLoader()
 const imgTexture = textureLoader.load(originImg)
 
-const mat = new THREE.MeshBasicMaterial({
-    map: imgTexture,
-    depthTest: true,
-    depthWrite: false,
-    transparent: true,
-    blending: THREE.AdditiveBlending
-})
-
 const imageLoader = new THREE.ImageLoader()
 const imageparams = imageLoader.load(originImg)
-if (render_mode === '2D') {
+if (render_mode === '2D' || render_mode === '3D') {
     const postPlane = new THREE.PlaneGeometry(2, 2.0 * imageparams.height / imageparams.width)
+    const mat = new THREE.MeshBasicMaterial({
+        map: imgTexture,
+        depthTest: true,
+        depthWrite: false,
+        transparent: true,
+        blending: THREE.NoBlending
+    })
     const postQuad = new THREE.Mesh(postPlane, mat)
     // postQuad.position.set(
     //   1920 - (800 * 0.5 + (1280 - 800) * 0.5),
