@@ -7,7 +7,7 @@ import { TestGeometry } from './TestGeometry';
 import { exit } from 'process';
 
 // 3D/2D
-let render_mode = '2D';
+let render_mode = '3D';
 const originImg = '/assets/original.jpeg'
 const depthImg = '/assets/depth-estimation.jpeg'
 const maskImg = '/assets/mask.png'
