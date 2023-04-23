@@ -14,16 +14,17 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 let render_mode = '3D';
 
 let render_pass = false;
-const originImg = '/assets/original.jpeg'
-const depthImg = '/assets/depth-estimation.jpeg'
-const maskImg = '/assets/mask.png'
-const normalImg = '/assets/surface-normals.jpeg'
 var composer: EffectComposer | undefined;
 
-// const originImg = '/assets/model/origin.png'
-// const depthImg = '/assets/model/depth.png'
+// const originImg = '/assets/original.jpeg'
+// const depthImg = '/assets/depth-estimation.jpeg'
 // const maskImg = '/assets/mask.png'
-// const normalImg = '/assets/model/normal.png'
+// const normalImg = '/assets/surface-normals.jpeg'
+
+const originImg = '/assets/model/origin.png'
+const depthImg = '/assets/model/depth.png'
+const maskImg = '/assets/mask.png'
+const normalImg = '/assets/model/normal.png'
 
 const blendingShader = {
     'uniforms': {

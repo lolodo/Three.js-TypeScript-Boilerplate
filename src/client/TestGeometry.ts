@@ -131,7 +131,7 @@ class TestGeometry extends THREE.BufferGeometry {
 		if (!url) return false;
 		// let canvas = document.createElement('canvas');
 		const canvas = this.canvas;
-		const context = canvas.getContext('2d');
+		const context = canvas.getContext('2d', { willReadFrequently: true });
 		if (context === null) {
 			return false;
 		}
