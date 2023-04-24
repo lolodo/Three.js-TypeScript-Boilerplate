@@ -116,7 +116,7 @@ if (render_mode == '2D') {
     pointLight.position.set(-0.6, 0.7, -0.2);
     pointLight.intensity = 1.0
 } else {
-    pointLight.position.set(-0.6, 0.7, 1.5);
+    pointLight.position.set(0.25, 0.2, 1.5);
     pointLight.intensity = 0.5
 
 }
