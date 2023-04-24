@@ -176,9 +176,9 @@ const imageparams = imageLoader.load(
             const mat = new THREE.MeshBasicMaterial({
                 map: imgTexture,
                 depthTest: true,
-                depthWrite: false,
-                transparent: true,
-                blending: THREE.AdditiveBlending
+                depthWrite: true,
+                transparent: false,
+                blending: THREE.NoBlending
             })
 
             var depthMat = new THREE.MeshStandardMaterial({
@@ -186,15 +186,16 @@ const imageparams = imageLoader.load(
                 // alphaMap:alphaTexture,
                 // displacementScale:10.0
                 // normalMap: normalTexture,
+                // side:THREE.CullFaceFront,
                 map: imgTexture,
                 roughness: 0.8,
                 metalness: 0.5,
                 depthTest: true,
                 depthWrite: true,
-                transparent: false
-                // blending: THREE.NoBlending
+                transparent: true,
+                blending: THREE.AdditiveBlending,
                 // blending: THREE.CustomBlending,
-                // blendSrc: THREE.OneFactor,
+                // blendSrc: THREE.SrcAlphaFactor,
                 // blendDst: THREE.OneFactor
                 // wireframe:true
             })
