@@ -313,9 +313,8 @@ function updateControls() {
         if (Math.abs(camera.position.z - 5) < 0.2) {
             camera.position.setZ(5);
         }
-        // camera.position.set(0, 0, 5)
-    }
 
+    }
     updateLightBox();
 }
 
@@ -352,10 +351,14 @@ function updateLightBox() {
         // let offset = new THREE.Vector3();
         // offset.subVectors(curPosition, lastPosition);
 
-        lastPosition.z = pointLight.position.z;
-        if (rightMouseDown) {
-            pointLight.position.copy(lastPosition);
-        } else if (leftMouseDown) {
+        if (options.control === 'light') {
+            lastPosition.z = pointLight.position.z;
+            if (rightMouseDown) {
+                pointLight.position.copy(lastPosition);
+            } else if (leftMouseDown) {
+                lastPosition.copy(pointLight.position);
+            }
+        } else if (options.control === 'orbit') {
             lastPosition.copy(pointLight.position);
         }
         lightBox.position.copy(lastPosition);
@@ -381,24 +384,31 @@ window.addEventListener('mousedown', function (e) {
     //   pointLight.position.x = mousePosition.x
     //   pointLight.position.y = mousePosition.y
     // console.log("button:", e.button);
-    if (e.button === 0) {
-        leftMouseDown = true;
-    } else if (e.button === 2) {
-        rightMouseDown = true;
-    }
 
-    this.window.addEventListener('mousemove', onMouseMove);
+    if (options.control === 'light') {
+        if (e.button === 0) {
+            leftMouseDown = true;
+        } else if (e.button === 2) {
+            rightMouseDown = true;
+        }
+
+        this.window.addEventListener('mousemove', onMouseMove);
+    }
 })
 
 window.addEventListener('mouseup', function (e) {
-    rightMouseDown = false;
-    leftMouseDown = false;
-    this.window.removeEventListener('mouseMove', onMouseMove)
+    if (options.control === 'light') {
+        rightMouseDown = false;
+        leftMouseDown = false;
+        this.window.removeEventListener('mouseMove', onMouseMove)
+    }
 });
 
 window.addEventListener('wheel', function (e) {
-    let offsetY = e.deltaY / this.window.innerHeight;
-    pointLight.position.add(new THREE.Vector3(0, 0, offsetY));
+    if (options.control === 'light') {
+        let offsetY = e.deltaY / this.window.innerHeight;
+        pointLight.position.add(new THREE.Vector3(0, 0, offsetY));
+    }
 });
 
 window.oncontextmenu = function (event) {
